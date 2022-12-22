@@ -1,0 +1,2 @@
+# Allow cannon shells to destry nodes when exploding
+cannon73_node_destruction (Cannon shell node destruction) bool true
