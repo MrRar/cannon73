@@ -237,11 +237,13 @@ local function cannon_on_rightclick(pos, node, clicker, itemstack, pointed_thing
 end
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if
-		formname == "cannon73:aim"
-		and formspec_state[player]
-	then
+	if formname == "cannon73:aim" then
 		local cannon = formspec_state[player]
+		if not cannon then return true end
+		local pos = cannon.object:get_pos()
+		if not pos then return true end
+		if minetest.get_node(pos).name ~= "cannon73:cannon" then return end
+		
 		if fields.yaw then
 			local yaw = (1000 - minetest.explode_scrollbar_event(fields.yaw).value) / 1000 * math.pi * 2
 			cannon.object:set_yaw(yaw)
@@ -251,7 +253,6 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			cannon:refresh_pitch()
 		end
 		if fields.powder_count then
-			local pos = cannon.object:get_pos()
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
 			local count = tonumber(fields.powder_count) or 0
@@ -265,6 +266,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		end
 		return true
 	end
+	return false
 end)
 
 minetest.register_on_leaveplayer(function(ObjectRef, timed_out)

@@ -1,4 +1,4 @@
-# Cannon 73
+# Cannon73
 
 [![ContentDB](https://content.minetest.net/packages/Mr.%20Rar/cannon73/shields/downloads/)](https://content.minetest.net/packages/Mr.%20Rar/cannon73/)
 
