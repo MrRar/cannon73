@@ -361,50 +361,23 @@ minetest.register_abm({
 
 local function place_node(pos, name, player, on_place)
 	local itemstack = ItemStack(name)
-	local x, y, z = pos.x, pos.y, pos.z
+	pos = vector.round(pos)
 	local pointed_thing = {
 		type = "node",
-		intersection_point = vector.new(x + 0.5, y, z + 0.5),
 		above = pos,
-		under = vector.new(x, y - 1, z),
+		under = pos,
 	}
 	on_place(itemstack, player, pointed_thing)
 end
 
 local function item_projectile_unload_payload(player, pos, item_stack)
 	local name = item_stack:get_name()
-	local craftitem_def = minetest.registered_craftitems[name]
+	local item_def = minetest.registered_items[name]
 	local node_def = minetest.registered_nodes[name]
 	local count = item_stack:get_count()
-	local item_def = minetest.registered_items[name]
 	local on_place
 	if item_def then on_place = item_def.on_place end
-	if craftitem_def and on_place then
-		local itemstack = ItemStack(name)
-		local x, y, z = pos.x, pos.y, pos.z
-		local pointed_thing = {
-			type = "node",
-			intersection_point = vector.new(x + 0.5, y, z + 0.5),
-			above = pos,
-			under = vector.new(x, y - 1, z),
-		}
-
-		-- See if the item produces an entity
-		local old_add_entity = minetest.add_entity
-		local add_entity_was_called = false
-		minetest.add_entity = function(...)
-			add_entity_was_called = true
-			return old_add_entity(...)
-		end
-		on_place(itemstack, player, pointed_thing)
-		minetest.add_entity = old_add_entity
-		if add_entity_was_called then
-			for i = 2, count do
-				on_place(itemstack, player, pointed_thing)
-			end
-			return
-		end
-	elseif node_def then
+	if node_def then
 		if count == 1 and minetest.get_node(pos).name == "air" then
 			place_node(pos, name, player, on_place)
 			return
@@ -425,6 +398,30 @@ local function item_projectile_unload_payload(player, pos, item_stack)
 			if i >= count then break end
 		end
 		return
+	elseif item_def and on_place then
+		local itemstack = ItemStack(name)
+		local pos = vector.round(pos)
+		local pointed_thing = {
+			type = "node",
+			above = pos,
+			under = vector.new(pos.x, pos.y - 1, pos.z),
+		}
+
+		-- See if the item produces an entity
+		local old_add_entity = minetest.add_entity
+		local add_entity_was_called = false
+		minetest.add_entity = function(...)
+			add_entity_was_called = true
+			return old_add_entity(...)
+		end
+		on_place(itemstack, player, pointed_thing)
+		minetest.add_entity = old_add_entity
+		if add_entity_was_called then
+			for i = 2, count do
+				on_place(itemstack, player, pointed_thing)
+			end
+			return
+		end
 	end
 
 	local obj = minetest.add_item(pos, item_stack)
